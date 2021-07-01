@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 const port = 3000;
 
@@ -9,9 +10,11 @@ const pets = require('./routes/pets.js');
 
 // ayuda a buscar archivos estaticos
 app.use(express.static('public'));
+// el parse lee los datos
+app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
-  res.send('Hello World!')
+  res.sendFile(path.join(__dirname + '/views/home.html'));
 });
 
 // cada vez que alguien llame a /pets se le envie lo que esta en el modulo pets
