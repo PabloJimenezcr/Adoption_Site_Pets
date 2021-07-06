@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/PabloJimenezcr/Adoption_Site_Pets#readme",
   "dependencies": {
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "mongodb": "^3.6.9"
   }
 }

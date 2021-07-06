@@ -1,6 +1,8 @@
-const { Router, response } = require('express');
 const express = require('express');
 const router = express.Router();
+const ObjectId = require('mongodb').ObjectId; 
+
+const mongodb = require('../database/mongodbUtils.js');
 
 const Pet = require('../models/pet.js');
 
@@ -12,16 +14,23 @@ let pets = [
     new Pet('Kelso', 1, 'dog', 'Shih Tzu', '/dogs/kelso.webp', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus cursus pulvinar eros non euismod. Aliquam egestas felis ac semper vestibulum. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.'),
 ];
 
-router.get('/', function (req, res) {
 
+router.get('/', function (req, res) {
     // ?? nulish = si esto es nulo asigne el 1 
     const page = req.query.page ?? 1;
     const limit = req.query.limit ?? 3;
 
-    // aca me da de 0 a 8
-    let paginatedResults = pets.slice(page - 1 * limit, page * limit);
+    let pets = mongodb.getPetsCollection();
 
-    res.json(paginatedResults);
+    pets.find().skip((page - 1) * limit).limit(page * limit).toArray((err, result) => {
+        if (err) {
+            res.sendStatus(500);
+        } else if (result.length === 0) {
+            res.sendStatus(404);
+        } else {
+            res.json(result);
+        }
+    });
 });
 
 router.post('/', function (req, res) {
@@ -33,25 +42,40 @@ router.post('/', function (req, res) {
     const description = req.body.description;
 
     const pet = new Pet(name, age, especies, race, picture, description);
-    pets.push(pet);
 
-    res.sendStatus(200);
+
+    let pets = mongodb.getPetsCollection();
+
+    pets.insertOne(pet);
+
+    res.redirect('/');
 
 });
 
-router.get('/:name', function(req, res){
-    const name = req.params.name;
+router.get('/:id', function (req, res) {
+    const id = req.params.id;
 
-    // find, busca cuando la mascota tenga el mismo nombre y si pasa lo retorna 
-    const pet = pets.find(pet => pet.name === name)
-        res.json(pet);
+    const pets = mongodb.getPetsCollection();
+
+    pets.find({ _id: new ObjectId(id) }).toArray((err, result) => {
+        if (err) {
+            res.sendStatus(500);
+        } else if (result.length === 0) {
+            res.sendStatus(404);
+        } else {
+            res.json(result);
+        }
+    });
 });
 
-router.delete('/:name', function(req, res){
-    const name = req.params.name;
+router.delete('/:id', function (req, res) {
+    const id = req.params.id;
 
-    // filter es para filtrar 
-    pets = pets.filter(pet => pet.name !== name);
+    const pets = mongodb.getPetsCollection();
+
+
+    pets.deleteOne({ _id: new ObjectId });
+
     res.sendStatus(200);
 });
 
